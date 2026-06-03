@@ -1,0 +1,6 @@
+{
+  "name": "Oráculo Têxtil",
+  "description": "Explicação, simulação de tecidos, morfologia de fibras e arqueologia têxtil em uma tela interativa de worldbuilding.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
