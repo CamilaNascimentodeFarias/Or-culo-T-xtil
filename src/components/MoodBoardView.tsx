@@ -19,10 +19,40 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
   const [draggingOffset, setDraggingOffset] = useState({ x: 0, y: 0 });
   const boardRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [showTextModal, setShowTextModal] = useState(false);
+  const [modalText, setModalText] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
+  const storageKey = `moodboard:${world?.id || 'default'}`;
 
   useEffect(() => {
     setArtifacts(world.artifacts);
   }, [world]);
+
+  // load persisted artifacts if present
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as VisualArtifact[];
+        if (Array.isArray(parsed) && parsed.length) {
+          setArtifacts(parsed);
+          return;
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // persist artifacts
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(artifacts));
+    } catch (err) {
+      // ignore
+    }
+  }, [artifacts, storageKey]);
 
   const handleDragStart = (e: React.MouseEvent, artId: string) => {
     e.stopPropagation();
@@ -89,7 +119,7 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        onChange={(e) => {
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
           const file = e.target.files?.[0];
           if (!file) return;
           const reader = new FileReader();
@@ -272,18 +302,9 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
 
         <button
           onClick={() => {
-            const text = prompt('Digite o texto para o moodboard:');
-            if (!text) return;
-            const id = `txt-${Date.now()}`;
-            const newArt: VisualArtifact = {
-              id,
-              type: 'text',
-              title: text.split('\n')[0].slice(0, 40),
-              content: text,
-              x: Math.floor(Math.random() * 500 + 150),
-              y: Math.floor(Math.random() * 300 + 120)
-            };
-            setArtifacts(prev => [...prev, newArt]);
+            setModalTitle('');
+            setModalText('');
+            setShowTextModal(true);
           }}
           className="flex flex-col items-center gap-0.5 group cursor-pointer"
         >
@@ -318,6 +339,53 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
         </button>
 
       </nav>
+
+      {/* Text modal */}
+      {showTextModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowTextModal(false)} />
+          <div className="relative z-10 w-full max-w-md bg-white rounded-lg p-4 shadow-lg">
+            <h3 className="text-lg font-semibold mb-2">Nova nota</h3>
+            <input
+              value={modalTitle}
+              onChange={(e) => setModalTitle(e.target.value)}
+              placeholder="Título (opcional)"
+              className="w-full border rounded px-2 py-1 mb-2"
+            />
+            <textarea
+              value={modalText}
+              onChange={(e) => setModalText(e.target.value)}
+              placeholder="Digite o texto aqui..."
+              rows={6}
+              className="w-full border rounded px-2 py-1 mb-3 resize-y"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowTextModal(false)}
+                className="px-3 py-1 rounded border"
+              >Cancelar</button>
+              <button
+                onClick={() => {
+                  const text = modalText.trim();
+                  if (!text) return;
+                  const id = `txt-${Date.now()}`;
+                  const newArt: VisualArtifact = {
+                    id,
+                    type: 'text',
+                    title: modalTitle || text.split('\n')[0].slice(0, 40),
+                    content: text,
+                    x: Math.floor(Math.random() * 500 + 150),
+                    y: Math.floor(Math.random() * 300 + 120)
+                  };
+                  setArtifacts(prev => [...prev, newArt]);
+                  setShowTextModal(false);
+                }}
+                className="px-3 py-1 rounded bg-nature-clay text-white"
+              >Adicionar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
