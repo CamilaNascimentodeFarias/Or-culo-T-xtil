@@ -44,10 +44,11 @@ export interface FabricDNA {
 
 export interface VisualArtifact {
   id: string;
-  type: 'swatch' | 'sketch' | 'palette' | 'tile' | 'node';
+  type: 'swatch' | 'sketch' | 'palette' | 'tile' | 'node' | 'text';
   title: string;
   subtitle?: string;
   description?: string;
+  content?: string; // for text artifacts
   image?: string;
   colors?: string[];
   x: number;

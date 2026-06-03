@@ -18,6 +18,7 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
   const [activeDraggableId, setActiveDraggableId] = useState<string | null>(null);
   const [draggingOffset, setDraggingOffset] = useState({ x: 0, y: 0 });
   const boardRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setArtifacts(world.artifacts);
@@ -83,6 +84,34 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
       onMouseLeave={handleDragEnd}
       className="flex-grow h-[calc(100vh-80px)] overflow-hidden relative select-none bg-nature-bg"
     >
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result as string;
+            const id = `img-${Date.now()}`;
+            const newArt: VisualArtifact = {
+              id,
+              type: 'swatch',
+              title: file.name,
+              image: dataUrl,
+              x: Math.floor(Math.random() * 500 + 150),
+              y: Math.floor(Math.random() * 300 + 120)
+            };
+            setArtifacts(prev => [...prev, newArt]);
+          };
+          reader.readAsDataURL(file);
+          // reset the input so same file can be reselected later
+          e.currentTarget.value = '';
+        }}
+        className="hidden"
+      />
       
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 pointer-events-none opacity-25 bg-[radial-gradient(#5a5a40_1.2px,transparent_1.2px)] bg-[size:36px_36px]" />
@@ -210,6 +239,14 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
               </div>
             )}
 
+            {/* 6. TEXT NOTE */}
+            {art.type === 'text' && (
+              <div className="max-w-xs p-3 bg-yellow-50 rounded-lg border border-nature-text/10 shadow-sm select-none">
+                <h4 className="text-sm font-semibold text-nature-text mb-1 truncate">{art.title}</h4>
+                <p className="text-sm text-nature-text/80 leading-snug whitespace-pre-wrap">{art.content || art.description}</p>
+              </div>
+            )}
+
           </div>
         );
       })}
@@ -223,6 +260,35 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
         >
           <Pin className="w-4 h-4 text-nature-text/60 group-hover:text-nature-clay transition-transform duration-200 group-hover:scale-110" />
           <span className="text-[9px] font-bold text-nature-text/50 font-mono">Pin</span>
+        </button>
+
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="flex flex-col items-center gap-0.5 group cursor-pointer"
+        >
+          <svg className="w-4 h-4 text-nature-text/60 group-hover:text-nature-clay" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21"/></svg>
+          <span className="text-[9px] font-bold text-nature-text/50 font-mono">Image</span>
+        </button>
+
+        <button
+          onClick={() => {
+            const text = prompt('Digite o texto para o moodboard:');
+            if (!text) return;
+            const id = `txt-${Date.now()}`;
+            const newArt: VisualArtifact = {
+              id,
+              type: 'text',
+              title: text.split('\n')[0].slice(0, 40),
+              content: text,
+              x: Math.floor(Math.random() * 500 + 150),
+              y: Math.floor(Math.random() * 300 + 120)
+            };
+            setArtifacts(prev => [...prev, newArt]);
+          }}
+          className="flex flex-col items-center gap-0.5 group cursor-pointer"
+        >
+          <svg className="w-4 h-4 text-nature-text/60 group-hover:text-nature-clay" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+          <span className="text-[9px] font-bold text-nature-text/50 font-mono">Text</span>
         </button>
 
         <button 
