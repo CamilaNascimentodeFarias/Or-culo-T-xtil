@@ -28,21 +28,24 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
     setArtifacts(world.artifacts);
   }, [world]);
 
-  // load from localStorage if present
+  // load persisted artifacts if present
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
         const parsed = JSON.parse(raw) as VisualArtifact[];
-        if (Array.isArray(parsed) && parsed.length) setArtifacts(parsed);
+        if (Array.isArray(parsed) && parsed.length) {
+          setArtifacts(parsed);
+          return;
+        }
       }
     } catch (err) {
-      // ignore parse errors
+      // ignore
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // persist artifacts to localStorage
+  // persist artifacts
   useEffect(() => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(artifacts));
@@ -116,7 +119,7 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        onChange={(e) => {
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
           const file = e.target.files?.[0];
           if (!file) return;
           const reader = new FileReader();
@@ -337,11 +340,11 @@ export default function MoodBoardView({ world }: MoodBoardViewProps) {
 
       </nav>
 
-      {/* Text Modal */}
+      {/* Text modal */}
       {showTextModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowTextModal(false)} />
-          <div className="relative z-70 w-full max-w-md bg-white rounded-lg p-4 shadow-lg">
+          <div className="relative z-10 w-full max-w-md bg-white rounded-lg p-4 shadow-lg">
             <h3 className="text-lg font-semibold mb-2">Nova nota</h3>
             <input
               value={modalTitle}
